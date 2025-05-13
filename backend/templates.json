@@ -1,0 +1,13 @@
+{
+  "blog_post_generator": {
+    "name": "Blog Post Generator",
+    "inputs": [
+      { "label": "Konu", "name": "topic", "type": "text" },
+      { "label": "Anahtar Kelimeler", "name": "keywords", "type": "text" },
+      { "label": "Ton", "name": "tone", "type": "select", "options": ["Bilgilendirici", "Resmi", "Samimi"] },
+      { "label": "Uzunluk", "name": "length", "type": "select", "options": ["Kısa", "Orta", "Uzun"] },
+      { "label": "Hedef Kitle", "name": "audience", "type": "text" }
+    ],
+    "prompt_template": "Konu: {topic}\nAnahtar Kelimeler: {keywords}\nTon: {tone}\nUzunluk: {length}\nHedef Kitle: {audience}"
+  }
+}
