@@ -23,9 +23,10 @@ const [copied, setCopied] = useState(false);
 
 
   useEffect(() => {
-    fetch(`http://localhost:8000/api/templates/${templateId}`)
+    fetch(`http://localhost:8000/api/templates/by-identifier/${templateId}`)
       .then((res) => res.json())
       .then((data) => {
+        console.log("Template verisi:", data);
         setTemplate(data);
       });
   }, [templateId]);
@@ -64,10 +65,11 @@ const [copied, setCopied] = useState(false);
       <LogoutButton />
       <h2 className="mb-4 text-center">{template.name}</h2>
 
-      {template.inputs.map((input, index) => (
+      {template.inputs?.map((input, index) => (
         <div key={index} className="mb-3">
           <label className="form-label">{input.label}</label>
-          {input.type === "select" ? (
+          {(input.type || "text") === "select" ? (
+
             <select
               className="form-select"
               name={input.name}

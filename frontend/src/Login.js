@@ -11,8 +11,19 @@ export default function Login() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard/blog_post_generator");
-    }
+  fetch("http://localhost:8000/me", {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/history");
+      }
+    });
+}
+
   }, [navigate]);
 
 

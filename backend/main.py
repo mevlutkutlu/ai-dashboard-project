@@ -5,6 +5,9 @@ from sqlmodel import Session, select
 import openai
 import json
 import os
+from models import Template 
+from typing import List
+
 
 from config import OPENAI_API_KEY
 from database import create_db_and_tables, get_session
@@ -38,7 +41,7 @@ def load_templates():
 
 # Template bilgisi döndür
 @app.get("/api/templates/{template_id}")
-def get_template(template_id: str):
+def get_template(template_id: int):
     templates = load_templates()
     template = templates.get(template_id)
     if not template:
@@ -59,12 +62,17 @@ def generate_output(
     if not user:
         raise HTTPException(status_code=401, detail="Geçersiz token")
 
-    templates = load_templates()
-    template = templates.get(req.template_id)
+    session = get_session()
+
+    # 👇 BURAYI GÜNCELLEDİK
+    template = session.exec(
+        select(Template).where(Template.identifier == req.template_id)
+    ).first()
+
     if not template:
         return {"error": "Template not found"}
 
-    prompt_template = template["prompt_template"]
+    prompt_template = template.prompt_template
     try:
         prompt = prompt_template.format(**req.fields)
     except KeyError as e:
@@ -77,11 +85,10 @@ def generate_output(
         )
         result = response["choices"][0]["message"]["content"]
 
-        # ✨ History kaydı
-        session = get_session()
+        # 🎯 History kaydet
         history = History(
             user_id=user.id,
-            template_id=req.template_id,
+            template_id=req.template_id,  # hâlâ identifier olarak tutuyorsan bu sorun değil
             input_fields=json.dumps(req.fields, ensure_ascii=False),
             output_text=result
         )
@@ -91,6 +98,7 @@ def generate_output(
         return {"result": result}
     except Exception as e:
         return {"error": str(e)}
+
     
 @app.get("/history")
 def get_history(authorization: str = Header(...)):
@@ -161,3 +169,81 @@ def me(authorization: str = Header(...)):
     return {"email": user.email, "role": user.role, "id": user.id}
 
 # ------------------ AUTH END ------------------
+
+#---------------ADMIN CRUD START-------------
+# Tüm şablonları getir
+@app.get("/api/templates")
+def list_templates():
+    session = get_session()
+    templates = session.exec(select(Template)).all()
+    return templates
+
+# Tek şablon getir
+@app.get("/api/templates/by-identifier/{identifier}")
+def get_template_by_identifier(identifier: str):
+    session = get_session()
+    template = session.exec(
+        select(Template).where(Template.identifier == identifier)
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    return {
+        "name": template.name,
+        "inputs": json.loads(template.inputs),
+        "prompt_template": template.prompt_template
+    }
+
+
+
+
+# Yeni şablon oluştur
+class TemplateCreate(BaseModel):
+    name: str
+    identifier: str
+    inputs: List[dict]
+    prompt_template: str
+
+@app.post("/api/templates")
+def create_template(data: TemplateCreate):
+    session = get_session()
+    exists = session.exec(select(Template).where(Template.identifier == data.identifier)).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Bu identifier zaten kullanılıyor.")
+    
+    template = Template(
+        name=data.name,
+        identifier=data.identifier,
+        inputs=json.dumps(data.inputs, ensure_ascii=False),
+        prompt_template=data.prompt_template
+    )
+    session.add(template)
+    session.commit()
+    return {"message": "Şablon oluşturuldu"}
+
+# Şablon sil
+@app.delete("/api/templates/{identifier}")
+def delete_template(identifier: str):
+    session = get_session()
+    template = session.exec(select(Template).where(Template.identifier == identifier)).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Şablon bulunamadı.")
+    session.delete(template)
+    session.commit()
+    return {"message": "Şablon silindi"}
+
+#----------------ADMIN CRUD END---------------
+@app.get("/debug/templates")
+def debug_templates():
+    session = get_session()
+    templates = session.exec(select(Template)).all()
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "identifier": t.identifier,
+            "inputs": t.inputs
+        }
+        for t in templates
+    ]
+
