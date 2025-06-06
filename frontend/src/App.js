@@ -5,7 +5,10 @@ import Login from "./Login";
 import HistoryList from "./HistoryList";
 import ProtectedRoute from "./ProtectedRoute";
 import AdminPanel from "./pages/AdminPanel";
-import AdminTemplates from "./pages/AdminTemplates"; // 👈 bu satırı ekle
+import AdminTemplates from "./pages/AdminTemplates";
+import UserHome from "./UserHome";
+import './App.css';
+
 
 function App() {
   return (
@@ -23,6 +26,7 @@ function App() {
         />
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/admin/templates" element={<AdminTemplates />} />
+        <Route path="/home" element={<UserHome />} />
       </Routes>
     </Router>
   );

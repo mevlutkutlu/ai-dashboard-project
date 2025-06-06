@@ -1,0 +1,16 @@
+body {
+  background-color: #6f42c1 !important;  /* Bootstrap'in mor tonu */
+  margin: 0 !important;
+  padding: 0!important;
+}
+
+.btn-mor {
+  background-color: #6f42c1 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-mor:hover {
+  background-color: #5a32a3 !important;
+}
+

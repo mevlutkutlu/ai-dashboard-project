@@ -1,31 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-  fetch("http://localhost:8000/me", {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/history");
-      }
-    });
-}
-
+      fetch("http://localhost:8000/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/home");
+          }
+        });
+    }
   }, [navigate]);
-
 
   const handleLogin = async () => {
     setError("");
@@ -40,14 +37,26 @@ export default function Login() {
 
       if (res.ok) {
         localStorage.setItem("token", data.access_token);
-        navigate("/dashboard/blog_post_generator");
+
+        const meRes = await fetch("http://localhost:8000/me", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+
+        const meData = await meRes.json();
+        localStorage.setItem("user_email", meData.email);
+        localStorage.setItem("user_role", meData.role);
+
+        if (meData.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/home");
+        }
       } else {
         setError(data.detail || "Giriş başarısız.");
       }
     } catch (err) {
       setError("Sunucu hatası.");
     }
-    
   };
 
   return (

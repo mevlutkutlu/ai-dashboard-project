@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export default function HistoryList() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // 👈 eklendi
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch("http://localhost:8000/history", {
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
@@ -18,12 +21,21 @@ export default function HistoryList() {
       });
   }, []);
 
-  if (loading) return <p>Yükleniyor...</p>;
-  if (!history.length) return <p>Henüz geçmiş yok.</p>;
+  if (loading) return <p className="text-center mt-5">Yükleniyor...</p>;
+  if (!history.length) {
+    return (
+      <div className="container mt-5 text-center">
+        <p>Henüz geçmiş yok.</p>
+        <button className="btn btn-outline-secondary mt-3" onClick={() => navigate("/home")}>
+          ⬅ Geri Dön
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
-      <h3>Geçmiş</h3>
+      <h3 className="text-center mb-4">Geçmiş</h3>
       {history.map((item, index) => (
         <div key={index} className="card mb-3 p-3">
           <small className="text-muted">{item.created_at}</small>
@@ -38,6 +50,12 @@ export default function HistoryList() {
           <pre>{item.output_text}</pre>
         </div>
       ))}
+
+      <div className="text-center mt-4">
+        <button className="btn btn-secondary" onClick={() => navigate("/home")}>
+          ⬅ Geri Dön
+        </button>
+      </div>
     </div>
   );
 }

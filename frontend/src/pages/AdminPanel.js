@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import "./AdminTemplates.css";
 
 export default function AdminTemplates() {
   const [templates, setTemplates] = useState([]);
+  const [formVisible, setFormVisible] = useState(false);
+  const [listVisible, setListVisible] = useState(false);
   const [form, setForm] = useState({
     name: "",
     identifier: "",
@@ -51,7 +54,6 @@ export default function AdminTemplates() {
       fetchTemplates();
     } else {
       const data = await res.json();
-      console.log("HATA:", data);
       alert(data.detail || JSON.stringify(data) || "Hata oluştu");
     }
   };
@@ -71,76 +73,125 @@ export default function AdminTemplates() {
       fetchTemplates();
     } else {
       const data = await res.json();
-      console.log("Silme hatası:", data);
       alert(data.detail || "Silme başarısız oldu.");
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Şablonları Yönet</h2>
+    <div className="container mt-5 text-white">
+      <div className="bg-warning text-dark p-4 rounded shadow d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="fw-bold mb-1">Şablonları Yönet</h2>
+          <p className="mb-0">Şablonları buradan ekleyip kaldırabilirsin.</p>
+        </div>
+        <button
+          className="btn btn-outline-dark"
+          onClick={() => {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+          }}
+        >
+          Oturumu Kapat
+        </button>
+      </div>
 
-      <h4 className="mt-4">Yeni Şablon Ekle</h4>
-      <div className="mb-3">
-        <input
-          type="text"
-          name="name"
-          className="form-control"
-          placeholder="Şablon Adı"
-          value={form.name}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-3">
-        <input
-          type="text"
-          name="identifier"
-          className="form-control"
-          placeholder="Identifier (örn: blog_post_generator)"
-          value={form.identifier}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-3">
-        <textarea
-          name="inputs"
-          className="form-control"
-          placeholder='Input alanları (JSON formatında gir, örn: [{"label":"Konu",...}])'
-          value={form.inputs}
-          rows={5}
-          onChange={handleChange}
-        />
-      </div>
-      <div className="mb-3">
-        <textarea
-          name="prompt_template"
-          className="form-control"
-          placeholder="Prompt şablonu"
-          value={form.prompt_template}
-          rows={4}
-          onChange={handleChange}
-        />
-      </div>
-      <button className="btn btn-success" onClick={handleSubmit}>
-        Kaydet
-      </button>
-
-      <h4 className="mt-5">Mevcut Şablonlar</h4>
-      <ul className="list-group mt-3">
-        {templates.map((t) => (
-          <li className="list-group-item d-flex justify-content-between align-items-center" key={t.id}>
-            <div>
-              <strong>{t.name}</strong> — <code>{t.identifier}</code>
+      <div className="row g-4">
+        <div className="col-md-6">
+          <div className="card bg-light text-dark shadow">
+            <div className="card-body">
+              <h5 className="card-title">Yeni Şablon Ekle</h5>
+              <p className="card-text">AI şablonlarını sisteme tanımla.</p>
+              <button className="btn btn-warning" onClick={() => setFormVisible(!formVisible)}>
+                {formVisible ? "Şablon Ekleme Alanını Gizle" : "Şablon Ekle"}
+              </button>
             </div>
-            <button
-              className="btn btn-sm btn-danger"
-              onClick={() => handleDelete(t.identifier)}
-            >
-              Sil
-            </button>
-          </li>
-        ))}
-      </ul>
+          </div>
+        </div>
+
+        <div className="col-md-6">
+          <div className="card bg-light text-dark shadow">
+            <div className="card-body">
+              <h5 className="card-title">Mevcut Şablonlar</h5>
+              <p className="card-text">Var olan şablonları görüntüle veya sil.</p>
+              <button className="btn btn-info" onClick={() => setListVisible(!listVisible)}>
+                {listVisible ? "Şablonları Gizle" : "Göster"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`transition-box mt-4 ${formVisible ? "show" : ""}`}>
+        <div className="card bg-light text-dark p-4 shadow">
+          <div className="mb-3">
+            <input
+              type="text"
+              name="name"
+              className="form-control"
+              placeholder="Şablon Adı"
+              value={form.name}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-3">
+            <input
+              type="text"
+              name="identifier"
+              className="form-control"
+              placeholder="Identifier (örn: blog_post_generator)"
+              value={form.identifier}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-3">
+            <textarea
+              name="inputs"
+              className="form-control"
+              placeholder='Input alanları (JSON formatında gir, örn: [{"label":"Konu",...}])'
+              value={form.inputs}
+              rows={4}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="mb-3">
+            <textarea
+              name="prompt_template"
+              className="form-control"
+              placeholder="Prompt şablonu"
+              value={form.prompt_template}
+              rows={3}
+              onChange={handleChange}
+            />
+          </div>
+          <button className="btn btn-success" onClick={handleSubmit}>
+            Kaydet
+          </button>
+        </div>
+      </div>
+
+      <div className={`transition-box mt-4 ${listVisible ? "show" : ""}`}>
+        <div className="card bg-light text-dark p-4 shadow">
+          <h5 className="card-title">Tanımlı Şablonlar</h5>
+          <ul className="list-group mt-3">
+            {templates.map((t) => (
+              <li
+                key={t.id}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <strong>{t.name}</strong> — <code>{t.identifier}</code>
+                </div>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => handleDelete(t.identifier)}
+                >
+                  Sil
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
